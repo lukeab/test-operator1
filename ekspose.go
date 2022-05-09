@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"k8s.io/client-go/informers"
@@ -24,6 +23,9 @@ func main() {
 	}
 	clientset := kubernetes.NewForConfigOrDie(config)
 
-	informer := informers.NewSharedInformerFactory(clientset, defaultTimeout)
-	fmt.Print(informer)
+	ch := make(chan struct{})
+	informerFactory := informers.NewSharedInformerFactory(clientset, defaultTimeout)
+	c := newController(clientset, informerFactory.Apps().V1().Deployments())
+	informerFactory.Start(ch)
+	c.run(ch)
 }
